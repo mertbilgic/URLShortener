@@ -1,6 +1,5 @@
 package com.urlShortener.services
 
-import akka.http.scaladsl.model.Uri
 import com.urlShortener.persistence.Model._
 
 import scala.concurrent.Future

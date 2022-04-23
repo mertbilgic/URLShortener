@@ -1,22 +1,20 @@
 package com.urlShortener.services
 
-import akka.http.scaladsl.model.{StatusCode, StatusCodes, Uri}
-import akka.http.scaladsl.server.Directives.redirect
-import com.urlShortener._Components.hashids
+import akka.http.scaladsl.model.StatusCodes
+import com.urlShortener._Components
 import com.urlShortener.persistence.Model._
-import com.urlShortener.util.Util.{checkUrlValid, createShortUrl, getHostUrl}
+import com.urlShortener.util.Util.{checkUrlValid, createShortUrl}
 import org.slf4j.{Logger, LoggerFactory}
 
-import java.net.URL
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-class ShortenerServiceImpl extends ShortenerService {
+class ShortenerServiceImpl extends ShortenerService with _Components {
   private val clickCount = 0
   private val logger: Logger = LoggerFactory.getLogger(getClass.getName)
-  private var UrlMap = Map[Int, Urls]()
+  private var UrlMap = Map[Long, Urls]()
   private var id = 0
 
   override def create(urlData: Url): Future[ServiceResponse[Url]] = Future {
@@ -26,22 +24,25 @@ class ShortenerServiceImpl extends ShortenerService {
         val urls = Urls(id, LocalDateTime.now().toString, urlData.url, clickCount)
         val shortUrl = createShortUrl(id)
         id = id + 1
-        Try(UrlMap + (urls.id -> urls)).map(updated => UrlMap = updated) match {
-          case Failure(exception) => Left(ErrorResponse(exception.getMessage, 0))
+        Try(UrlMap + (urls.id.toLong -> urls)).map(updated => UrlMap = updated) match {
+          case Failure(exception) => Left(ErrorResponse(exception.getMessage, StatusCodes.InternalServerError.intValue))
           case Success(_) => Right(Url(shortUrl))
         }
-      case Failure(_) => Left(ErrorResponse("Malformed url", 10))
+      case Failure(_) => Left(ErrorResponse("Malformed url", StatusCodes.BadRequest.intValue))
     }
   }
 
   override def redirectUrl(urlData: Url): Future[ServiceResponse[Url]] = Future {
     checkUrlValid(urlData.url) match {
       case Success(url) =>
-        val path = url.getPath
-        val id = hashids.decode(path.replace("/",""))
-        val redirectUrl = UrlMap(id(0).toInt).originalUrl
-        Right(Url(redirectUrl))
-      case Failure(_) => Left(ErrorResponse("Malformed url", 10))
+        val urlId = Try(hashids.decode(url.getPath.replace("/", "")))
+        urlId match {
+          case Success(id) if UrlMap.size > 0 =>
+            val redirectUrl = UrlMap(id.head).originalUrl
+            Right(Url(redirectUrl))
+          case _ => Left(ErrorResponse("URL Not Found", StatusCodes.NotFound.intValue))
+        }
+      case Failure(_) => Left(ErrorResponse("Malformed url", StatusCodes.BadRequest.intValue))
     }
   }
 

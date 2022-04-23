@@ -1,12 +1,12 @@
 package com.urlShortener.util
 
-import com.urlShortener._Components.hashids
+import com.urlShortener._Components
 import com.urlShortener.config.AppConfig.{httpInterface, httpPort}
 
 import java.net.{MalformedURLException, URL}
 import scala.util.{Failure, Success}
 
-object Util {
+object Util extends _Components{
   def getHostUrl(): String = s"http://$httpInterface:$httpPort/"
 
   def createShortUrl(urlId: Int): String = {

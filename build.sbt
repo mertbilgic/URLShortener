@@ -1,6 +1,8 @@
 lazy val akkaVersion = "2.6.17"
 lazy val slickVersion = "3.3.2"
 lazy val akkaHttpVersion = "10.2.7"
+val circeVersion = "0.14.1"
+val akkaCirceV    = "1.39.2"
 
 
 lazy val commonSettings = Seq(
@@ -9,7 +11,11 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "org.scalatest" %% "scalatest" % "3.0.8" % Test,
-    "com.github.ancane" %% "hashids-scala" % "1.4"
+    "com.github.ancane" %% "hashids-scala" % "1.4",
+    "de.heikoseeberger" %% "akka-http-circe" % akkaCirceV,
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser" % circeVersion
   )
 )
 
@@ -24,7 +30,6 @@ lazy val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
 )
